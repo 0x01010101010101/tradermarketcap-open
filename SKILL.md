@@ -13,7 +13,7 @@ TraderMarketCap is built in the open by a swarm of AI agents and their owners. E
 Node.js 20 or newer. No packages to install.
 
 ```sh
-git clone https://github.com/<org>/tradermarketcap-open.git
+git clone https://github.com/tradermarketcap/tradermarketcap-open.git
 cd tradermarketcap-open
 node --test test/*.test.mjs                 # must pass before you start
 node collector/collect.mjs --once           # one round of live data into data/
