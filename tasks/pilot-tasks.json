@@ -1,0 +1,22 @@
+[
+  { "title": "Read BNB circulating supply from the chain", "type": "native-chain", "bounty": 2, "done": "New `bnb` method in chainsupply.mjs returning circulating and total from a public BNB Chain source, rule added for BNB in coins.json, test added." },
+  { "title": "Read SUI circulating supply from the chain", "type": "native-chain", "bounty": 2, "done": "New `sui` method using a public Sui RPC; locked/staked foundation amounts handled as documented by Sui; rule + test." },
+  { "title": "Read SEI circulating supply from the chain", "type": "native-chain", "bounty": 2, "done": "New `sei` method (or extend `cosmos`) with community pool and vesting accounts subtracted; rule + test." },
+  { "title": "Read TIA (Celestia) circulating supply", "type": "native-chain", "bounty": 2, "done": "Use the `cosmos` reader or a new method with vesting accounts subtracted; rule + test." },
+  { "title": "Read APT (Aptos) circulating supply", "type": "native-chain", "bounty": 2, "done": "New `aptos` method from a public Aptos API; locked foundation/team stake subtracted with sources; rule + test." },
+  { "title": "Read ALGO circulating supply with Foundation wallets excluded", "type": "native-chain", "bounty": 2, "done": "Algorand Foundation and related wallets identified with sources and subtracted; rule + test." },
+  { "title": "Read TON circulating supply", "type": "native-chain", "bounty": 2, "done": "New `ton` method from a public TON API; frozen/early-miner wallets handled with sources; rule + test." },
+  { "title": "Read RUNE circulating supply from THORChain", "type": "native-chain", "bounty": 2, "done": "Use THORNode or Midgard public endpoints; reserve and module accounts handled; rule + test." },
+  { "title": "Split AVAX locked stake out of the total", "type": "native-chain", "bounty": 2, "done": "AVAX circulating excludes locked P-chain stake per Avalanche's published method; rule + test." },
+  { "title": "Find ENA's locked team and investor wallets", "type": "locked-wallets", "bounty": 1, "done": "Wallet list with public sources added to the ENA `tokens` rule; circulating no longer overstated." },
+  { "title": "Find LINK's non-circulating wallets", "type": "locked-wallets", "bounty": 1, "done": "Chainlink's reserve/team wallets added with sources; rule reads correctly." },
+  { "title": "Find ONDO's locked allocation wallets", "type": "locked-wallets", "bounty": 1, "done": "Wallets with sources added to the ONDO rule." },
+  { "title": "Find FET's non-circulating wallets", "type": "locked-wallets", "bounty": 1, "done": "Wallets with sources added to the FET rule." },
+  { "title": "Find JUP's locked wallets", "type": "locked-wallets", "bounty": 1, "done": "Jupiter's locked team/community wallets with sources added to the JUP rule (Solana)." },
+  { "title": "Find PYTH's locked allocation wallets", "type": "locked-wallets", "bounty": 1, "done": "Wallets with sources added to the PYTH rule (Solana)." },
+  { "title": "Find OP's non-circulating wallets", "type": "locked-wallets", "bounty": 1, "done": "Optimism Foundation and unlocking wallets with sources added to the OP rule." },
+  { "title": "Fix QNT supply (totalSupply is hardcoded)", "type": "wrong-contract", "bounty": 0.5, "done": "QNT circulating read from a correct source with explanation; rule + test." },
+  { "title": "Fix AERO's listed Base contract", "type": "wrong-contract", "bounty": 0.5, "done": "Correct AERO contract on Base with source; supply reads correctly." },
+  { "title": "Add a Bybit exchange reader", "type": "exchange", "bounty": 3, "done": "Bybit spot tickers read from the free public endpoint into exchanges.mjs, with volume and trade links; test added." },
+  { "title": "Add a Bitget exchange reader", "type": "exchange", "bounty": 3, "done": "Bitget spot tickers read from the free public endpoint; test added." }
+]

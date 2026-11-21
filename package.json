@@ -1,0 +1,17 @@
+{
+  "name": "tradermarketcap-open",
+  "version": "0.1.0",
+  "private": false,
+  "description": "TraderMarketCap.com: market data you can check, for people and bots",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "collect": "node collector/collect.mjs",
+    "collect:once": "node collector/collect.mjs --once",
+    "web": "node server/server.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,147 @@
+// Public exchange tickers. One bulk call per exchange gives every pair.
+// Each reader returns markets: { venue, base, quote, price, volBase, volQuote, change24h, api, trade }.
+// `api` is the public URL for that one pair, so anyone can check the number we show.
+import { getJSON, n } from '../../src/util.mjs';
+import { USD_QUOTES } from '../../src/model.mjs';
+
+const ALIAS = { XBT: 'BTC', XDG: 'DOGE' };
+const sym = s => ALIAS[s] || s;
+const keep = (base, quote) => base && USD_QUOTES.has(quote);
+
+function splitJoined(s) {
+  for (const q of ['USDT', 'USDC', 'USD']) if (s.endsWith(q) && s.length > q.length) return [s.slice(0, -q.length), q];
+  return [null, null];
+}
+
+export const VENUES = {
+  coinbase: { name: 'Coinbase', type: 'Exchange', site: 'https://www.coinbase.com' },
+  kraken: { name: 'Kraken', type: 'Exchange', site: 'https://www.kraken.com' },
+  okx: { name: 'OKX', type: 'Exchange', site: 'https://www.okx.com' },
+  kucoin: { name: 'KuCoin', type: 'Exchange', site: 'https://www.kucoin.com' },
+  gate: { name: 'Gate', type: 'Exchange', site: 'https://www.gate.io' },
+  mexc: { name: 'MEXC', type: 'Exchange', site: 'https://www.mexc.com' },
+  binanceus: { name: 'Binance.US', type: 'Exchange', site: 'https://www.binance.us' },
+};
+
+let krakenPairs = null, krakenPairsAt = 0;
+
+export const READERS = {
+  async coinbase() {
+    const d = await getJSON('https://api.exchange.coinbase.com/products/stats');
+    const out = [];
+    for (const [id, v] of Object.entries(d)) {
+      const [b, q] = id.split('-'), s = v.stats_24hour || {};
+      if (!keep(b, q)) continue;
+      const price = n(s.last), open = n(s.open);
+      out.push({
+        venue: 'coinbase', base: sym(b), quote: q, price, volBase: n(s.volume), volQuote: null,
+        change24h: price && open ? (price / open - 1) * 100 : null,
+        api: `https://api.exchange.coinbase.com/products/${id}/stats`,
+        trade: `https://www.coinbase.com/advanced-trade/spot/${id}`,
+      });
+    }
+    return out;
+  },
+
+  async kraken() {
+    if (!krakenPairs || Date.now() - krakenPairsAt > 6 * 3600e3) {
+      krakenPairs = (await getJSON('https://api.kraken.com/0/public/AssetPairs')).result;
+      krakenPairsAt = Date.now();
+    }
+    const d = (await getJSON('https://api.kraken.com/0/public/Ticker')).result;
+    const out = [];
+    for (const [k, v] of Object.entries(d)) {
+      const p = krakenPairs[k];
+      if (!p || !p.wsname) continue;
+      const [b, q] = p.wsname.split('/');
+      if (!keep(sym(b), q)) continue;
+      out.push({
+        venue: 'kraken', base: sym(b), quote: q, price: n(v.c[0]), volBase: n(v.v[1]), volQuote: null, change24h: null,
+        api: `https://api.kraken.com/0/public/Ticker?pair=${p.altname}`,
+        trade: `https://pro.kraken.com/app/trade/${b.toLowerCase()}-${q.toLowerCase()}`,
+      });
+    }
+    return out;
+  },
+
+  async okx() {
+    const d = (await getJSON('https://www.okx.com/api/v5/market/tickers?instType=SPOT')).data;
+    const out = [];
+    for (const v of d) {
+      const [b, q] = v.instId.split('-');
+      if (!keep(b, q)) continue;
+      const price = n(v.last), open = n(v.open24h);
+      out.push({
+        venue: 'okx', base: b, quote: q, price, volBase: n(v.vol24h), volQuote: n(v.volCcy24h),
+        change24h: price && open ? (price / open - 1) * 100 : null,
+        api: `https://www.okx.com/api/v5/market/ticker?instId=${v.instId}`,
+        trade: `https://www.okx.com/trade-spot/${v.instId.toLowerCase()}`,
+      });
+    }
+    return out;
+  },
+
+  async kucoin() {
+    const d = (await getJSON('https://api.kucoin.com/api/v1/market/allTickers')).data.ticker;
+    const out = [];
+    for (const v of d) {
+      const [b, q] = v.symbol.split('-');
+      if (!keep(b, q)) continue;
+      out.push({
+        venue: 'kucoin', base: b, quote: q, price: n(v.last), volBase: n(v.vol), volQuote: n(v.volValue),
+        change24h: n(v.changeRate) != null ? n(v.changeRate) * 100 : null,
+        api: `https://api.kucoin.com/api/v1/market/stats?symbol=${v.symbol}`,
+        trade: `https://www.kucoin.com/trade/${v.symbol}`,
+      });
+    }
+    return out;
+  },
+
+  async gate() {
+    const d = await getJSON('https://api.gateio.ws/api/v4/spot/tickers', { timeout: 25000 });
+    const out = [];
+    for (const v of d) {
+      const [b, q] = v.currency_pair.split('_');
+      if (!keep(b, q)) continue;
+      out.push({
+        venue: 'gate', base: b, quote: q, price: n(v.last), volBase: n(v.base_volume), volQuote: n(v.quote_volume),
+        change24h: n(v.change_percentage),
+        api: `https://api.gateio.ws/api/v4/spot/tickers?currency_pair=${v.currency_pair}`,
+        trade: `https://www.gate.io/trade/${v.currency_pair}`,
+      });
+    }
+    return out;
+  },
+
+  async mexc() {
+    const d = await getJSON('https://api.mexc.com/api/v3/ticker/24hr', { timeout: 25000 });
+    const out = [];
+    for (const v of d) {
+      const [b, q] = splitJoined(v.symbol);
+      if (!keep(b, q)) continue;
+      out.push({
+        venue: 'mexc', base: b, quote: q, price: n(v.lastPrice), volBase: n(v.volume), volQuote: n(v.quoteVolume),
+        change24h: n(v.priceChangePercent) != null ? n(v.priceChangePercent) * 100 : null,
+        api: `https://api.mexc.com/api/v3/ticker/24hr?symbol=${v.symbol}`,
+        trade: `https://www.mexc.com/exchange/${b}_${q}`,
+      });
+    }
+    return out;
+  },
+
+  async binanceus() {
+    const d = await getJSON('https://api.binance.us/api/v3/ticker/24hr');
+    const out = [];
+    for (const v of d) {
+      const [b, q] = splitJoined(v.symbol);
+      if (!keep(b, q)) continue;
+      out.push({
+        venue: 'binanceus', base: b, quote: q, price: n(v.lastPrice), volBase: n(v.volume), volQuote: n(v.quoteVolume),
+        change24h: n(v.priceChangePercent),
+        api: `https://api.binance.us/api/v3/ticker/24hr?symbol=${v.symbol}`,
+        trade: `https://www.binance.us/spot-trade/${b.toLowerCase()}_${q.toLowerCase()}`,
+      });
+    }
+    return out;
+  },
+};

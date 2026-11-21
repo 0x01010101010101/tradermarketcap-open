@@ -1,0 +1,7 @@
+{
+  "_help": "Ad slots. Every ad shows an 'Ad' tag. Empty slot shows 'Advertise here'. Fields: img (URL), url, alt, until (ISO).",
+  "slots": {
+    "home": null,
+    "coin": null
+  }
+}
